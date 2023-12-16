@@ -54,8 +54,6 @@ class ObjectDetectionHead(nn.Module):
 
         return class_logits, box_coordinates
 
-
-
 class ObjectDetectionModel(nn.Module):
     def __init__(self, num_classes, num_queries, hidden_dim=768):
         super(ObjectDetectionModel, self).__init__()
@@ -94,27 +92,17 @@ class ObjectDetectionModel(nn.Module):
 
         return class_logits, box_coordinates
 
-
-    
 class COCOParser:
     def __init__(self, anns_file, imgs_dir):
         with open(anns_file, 'r') as f:
             coco = json.load(f)
 
-        # Check if the 'categories' key exists and print its contents
-       # if 'categories' in coco:
-       #     print("Found 'categories' in annotations:", coco['categories'])
-       # else:
-       #     print("'categories' not found in annotations.")    
-            
         self.annIm_dict = defaultdict(list)        
         self.cat_dict = {} 
         if 'categories' in coco:
             for cat in coco['categories']:
                 self.cat_dict[cat['id']] = cat
         
-        # Check if cat_dict is populated
-      #  print("cat_dict contents:", self.cat_dict)
         self.annId_dict = {}
         self.im_dict = {}
         self.licenses_dict = {}
@@ -130,7 +118,6 @@ class COCOParser:
             self.cat_dict[cat['id']] = cat
         for license in coco['licenses']:
             self.licenses_dict[license['id']] = license
-
     
     def create_category_mapping(self):
         """
@@ -222,7 +209,6 @@ class COCODataset(torch.utils.data.Dataset):
         
         # Normalize and convert bounding boxes
         bboxes = self.convert_and_normalize_boxes(bboxes, *original_size)
-        #print("target bboxes after conversion", bboxes)
 
         # Convert category IDs to names
         label_names = [self.coco_parser.id_to_name[label] for label in labels]
@@ -235,7 +221,6 @@ class COCODataset(torch.utils.data.Dataset):
         labels = torch.as_tensor(labels, dtype=torch.int64)
         
         target = {"boxes": bboxes, "labels": label_names, "image_size": original_size}
-        
         
         # Apply transformations to the image
         if self.transform:
@@ -309,7 +294,6 @@ def visualize_bboxes(image, target):
     # Save the image with bounding boxes
     plt.savefig("/home/ps332/myViT/visualize_ground_truth.png")
 
-
 def apply_nms(orig_boxes, orig_scores, iou_thresh=0.5):
     # Convert to torch tensors
     boxes = torch.as_tensor(orig_boxes, dtype=torch.float32)
@@ -323,7 +307,6 @@ def apply_nms(orig_boxes, orig_scores, iou_thresh=0.5):
     final_scores = scores[keep_indices].numpy()
     
     return final_boxes, final_scores
-
 
 def compute_loss(class_logits, box_coordinates, targets, coco_parser, alpha=0.25, num_classes=81, num_boxes=100):
     classification_loss = nn.CrossEntropyLoss(reduction='sum')
@@ -461,20 +444,6 @@ def main():
 
         torch.save(model.state_dict(), "/home/ps332/myViT/new_object_detection_model_final.pth")
 
-
-
 if __name__ == '__main__':
     main()            
 
-############################################################################################################################################################
-# To load the model, you will need to create an instance of the model class and then load the state dictionary into this instance:
-#model = ObjectDetectionModel(num_classes=num_classes, num_boxes=num_boxes)
-#model.load_state_dict(torch.load("/home/ps332/myViT/object_detection_model_final.pth"))
-#model.to(device)  # Make sure to also call .to(device) if you're using a GPU
-
-# If you also need to resume training from a checkpoint, you can load the optimizer state as well:
-#checkpoint = torch.load("/home/ps332/myViT/object_detection_model_epoch_{epoch}.pth")
-#model.load_state_dict(checkpoint['model_state_dict'])
-#optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-#epoch = checkpoint['epoch']
-#loss = checkpoint['loss']
