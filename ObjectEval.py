@@ -95,7 +95,6 @@ class ObjectDetectionModel(nn.Module):
 
         return class_logits, box_coordinates
 
-
 class COCOParser:
     def __init__(self, anns_file, imgs_dir):
         with open(anns_file, 'r') as f:
@@ -131,7 +130,6 @@ class COCOParser:
         for license in coco['licenses']:
             self.licenses_dict[license['id']] = license
 
-    
     def create_category_mapping(self):
         """
         Create a mapping from COCO category IDs to sequential indices.
@@ -222,7 +220,6 @@ class COCODataset(torch.utils.data.Dataset):
         
         # Normalize and convert bounding boxes
         bboxes = self.convert_and_normalize_boxes(bboxes, *original_size)
-       #print("target bboxes after conversion", bboxes)
 
         # Convert category IDs to names
         label_names = [self.coco_parser.id_to_name[label] for label in labels]
@@ -260,7 +257,6 @@ def collate_fn(batch):
     # we don't stack or pad them like images.
     return images, targets
 
-
 def map_indices_to_labels(label_indices, label_mapping):
     """
     Map a tensor of label indices to actual labels using the provided mapping.
@@ -270,7 +266,6 @@ def map_indices_to_labels(label_indices, label_mapping):
     :return: List of labels.
     """
     return [label_mapping[idx.item()] for idx in label_indices]
-
 
 def visualize_bboxes(image, target):
     # Extract the bounding boxes and labels from the target dictionary
@@ -448,7 +443,6 @@ def visualize_batch_predictions(images, class_logits, box_coordinates, threshold
             denormalized_image = denormalize(image_tensor).cpu()
             visualize_predictions(denormalized_image, final_boxes, final_scores, image_size)
 
-
 def process_model_output(class_logits, bbox_coords, threshold=0.5):
     num_classes = 81
     num_boxes = 100  # Number of boxes per image
@@ -488,7 +482,6 @@ def process_model_output(class_logits, bbox_coords, threshold=0.5):
 
     return all_selected_labels, all_selected_boxes, all_selected_scores
 
-
 def main():
     
     batch_size = 64
@@ -506,27 +499,18 @@ def main():
     #model.load_state_dict(checkpoint['model_state_dict'])
     model.load_state_dict(torch.load("/home/ps332/myViT/object_detection_model_final.pth"))
 
-    #torch.save(model.state_dict(), "/mnt/offload/mansi/VitObjDet/object_detection_model_final.pth")
-
     eval_dataset = COCODataset(annotation_file="/home/ps332/myViT/coco_ann2017/annotations/instances_val2017.json",
                                 image_dir= "/home/ps332/myViT/coco_val2017/val2017",
                                 transform = transform)
 
     eval_loader = DataLoader(eval_dataset, batch_size = 1, shuffle = False, collate_fn = collate_fn )
-
-
-    
-
     # To load the model, you will need to create an instance of the model class and then load the state dictionary into this instance:
     # model = ObjectDetectionModel(num_classes=num_classes, num_boxes=num_boxes)
     # model.load_state_dict(torch.load("/content/object_detection_model_final.pth"))
 
     model.to(device)
     model.eval()
-
     print("Running evaluation...")
-
-
     res = []
     id = 0
 
@@ -539,7 +523,6 @@ def main():
             threshold = 0.5
 
             class_logits, box_coordinates = model(images)
-
             selected_label, selected_boxes, selected_scores = process_model_output(class_logits, box_coordinates, threshold)
             # print("category id:", selected_label)
             # print("bbox:", selected_boxes)
@@ -572,7 +555,6 @@ def main():
                         id=id+1
 
     #print(res)
-
     output_file_path = "results.json"
 
     # Save the 'converted_data' to the JSON file
@@ -588,25 +570,5 @@ def main():
     # cocoeval.accumulate()
     # cocoeval.summarize()
 
-                    
-
-
-   
-
-
 if __name__ == '__main__':
     main()            
-
-
-############################################################################################################################################################
-# To load the model, you will need to create an instance of the model class and then load the state dictionary into this instance:
-#model = ObjectDetectionModel(num_classes=num_classes, num_boxes=num_boxes)
-#model.load_state_dict(torch.load("/home/ps332/myViT/object_detection_model_final.pth"))
-#model.to(device)  # Make sure to also call .to(device) if you're using a GPU
-
-# If you also need to resume training from a checkpoint, you can load the optimizer state as well:
-#checkpoint = torch.load("/home/ps332/myViT/object_detection_model_epoch_{epoch}.pth")
-#model.load_state_dict(checkpoint['model_state_dict'])
-#optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-#epoch = checkpoint['epoch']
-#loss = checkpoint['loss']
