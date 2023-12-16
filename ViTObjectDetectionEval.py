@@ -116,7 +116,6 @@ class COCOParser:
         """
         all_cat_ids = sorted([cat_id for cat_id in self.cat_dict.keys()])
         self.cat_id_to_index = {cat_id: index for index, cat_id in enumerate(all_cat_ids)}
-       # print("Category IDs in mapping:", sorted(self.cat_id_to_index.keys())) # debugging purposes
 
     def create_id_to_name_mapping(self):
         """
@@ -184,7 +183,6 @@ class COCODataset(torch.utils.data.Dataset):
         # Load image
         image = Image.open(img_path).convert("RGB")
         original_size = image.size  # Original image size (W, H)
-
 
         # Load bounding boxes and labels
         bboxes, labels = self.coco_parser.load_bbox_and_labels(img_id)
@@ -412,7 +410,6 @@ def process_model_output(class_logits, bbox_coords, threshold=0.85):
     # Choose the label with the highest probability for each box
     max_probs, labels = torch.max(probabilities, dim=2)
     #print("max_probs", max_probs)
-    ################################################################^^^correct up to here
 
     # Initialize lists to store the results for each image
     all_selected_labels = []
@@ -466,23 +463,9 @@ def scale_boxes_to_original(boxes, original_width, original_height):
         scaled_boxes.append(scaled_box)
     return scaled_boxes
 
-
-
 # Device selection (CUDA GPU if available, otherwise CPU)
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(device)
-
-"""""
-ToDo:
-1. Reshape logits (currently 1x8000) to 80x100
-2. Choose label with highest probablity for each box resulting in a 1x100 tensor
-3. Apply threshold to choose best boxes - 1xn tensor
-4. Visualize
-5. Compile into result file with data format {image_id, cat_id, bbox, score} for each selected box
--Format: [{ "image_id" : int, "category_id" : int, "bbox" : [x,y,width,height], "score" : float, }]
--Convert box_coordinates to bbox
--Evaluate with cocoeval
-"""""
 
 def main():
     num_classes=80
@@ -514,13 +497,10 @@ def main():
             class_logits, box_coordinates = model(images)
             print(f"box coords for image:", box_coordinates)
 
-
             #Reshape the predictions
             class_logits = class_logits.view(batch_size, num_predicted_boxes, num_classes)
             box_coordinates = box_coordinates.view(batch_size, num_predicted_boxes, 4)
 
-            
-            
             # Process each image in the batch
             #for i in range(batch_size):
             # Get the original image size (assuming you have a way to get this information)
@@ -529,7 +509,6 @@ def main():
                 # Assuming original_width and original_height are the dimensions of the input image
               #  scaled_boxes = scale_boxes_to_original(box_coordinates, original_width, original_height)
                # print("scaled bboxes", scaled_boxes) #THIS IS CORRECT AND WORKING
-
 
             # Scale the coordinates
                 #scaled_bboxes = scale_coords_to_pixels(box_coordinates[i].cpu().numpy(), original_width, original_height)
