@@ -16,4 +16,4 @@ To run (2):
 -ObjectEval.py is the evaluation file that gathers results and turns them into results.json file
 -Optional: You can run COCOEval.py but there are bugs that will lead to incorrect mAP metrics (which is why we show our losses)
 
-Note*: This is still a work in progress
+*Note: This is still a work in progress
