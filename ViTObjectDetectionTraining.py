@@ -90,11 +90,7 @@ class ObjectDetectionModel(nn.Module):
         # Apply BatchNorm separately to class_logits
         class_logits = self.class_bn(class_logits)
 
-        print("Debug shapes - class_logits:", class_logits.shape, "box_coordinates:", box_coordinates.shape)
-
-
         return class_logits, box_coordinates
-
 
 class COCOParser:
     def __init__(self, anns_file, imgs_dir):
@@ -130,7 +126,6 @@ class COCOParser:
             self.cat_dict[cat['id']] = cat
         for license in coco['licenses']:
             self.licenses_dict[license['id']] = license
-
     
     def create_category_mapping(self):
         """
@@ -222,7 +217,6 @@ class COCODataset(torch.utils.data.Dataset):
         
         # Normalize and convert bounding boxes
         bboxes = self.convert_and_normalize_boxes(bboxes, *original_size)
-       #print("target bboxes after conversion", bboxes)
 
         # Convert category IDs to names
         label_names = [self.coco_parser.id_to_name[label] for label in labels]
@@ -242,7 +236,6 @@ class COCODataset(torch.utils.data.Dataset):
         
         # Return the transformed image and the target
         return transformed_image, target
-
 
 transform = Compose([
     Resize((224, 224)),  # Resize images
@@ -350,7 +343,6 @@ def visualize_predictions(image_tensor, boxes, labels, scores, image_size, thres
     plt.show()
     plt.savefig("/home/ps332/myViT/visualize_predictions.png")
 
-
 def compute_loss(class_logits, box_coordinates, targets, coco_parser, alpha=0.25, num_classes=81, num_boxes=100):
     classification_loss = nn.CrossEntropyLoss(reduction='sum')
     regression_loss = nn.SmoothL1Loss(reduction='sum')
@@ -445,7 +437,6 @@ def visualize_batch_predictions(images, class_logits, box_coordinates, threshold
             # Visualize the final predictions after NMS
             denormalized_image = denormalize(image_tensor).cpu()
             visualize_predictions(denormalized_image, final_boxes, final_scores, image_size)
-
 
 def process_model_output(class_logits, bbox_coords, threshold=0.5):
     num_classes = 81
@@ -558,18 +549,6 @@ def main():
 
             train_loss += loss.item()
 
-
-            # Visualize predictions
-           # for i in range(images.size(0)):
-            #    image_cpu = images[i].cpu()
-             #   visualize_predictions(
-              #      image_tensor=image_cpu, 
-               #     boxes=all_selected_boxes[i].detach().cpu().numpy(),
-                #    labels=all_selected_labels[i].detach().cpu().numpy(),
-                 #   scores=all_selected_scores[i].detach().cpu().numpy(),
-                  #  image_size=image_cpu.shape[1:3]
-                   # )
-
         # At the end of each epoch, save the model
         torch.save({
             'epoch': epoch,
@@ -583,8 +562,6 @@ def main():
         print(f"Epoch {epoch}: Training Loss: {train_loss/len(train_loader)}")
 
         torch.save(model.state_dict(), "/home/ps332/myViT/object_detection_model_final.pth")
-
-
 
 if __name__ == '__main__':
     main()            
